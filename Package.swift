@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "PerformanceKit", targets: ["PerformanceKit"]),
         .library(name: "VisionEvalKit", targets: ["VisionEvalKit"]),
         .library(name: "UITestingBridge", targets: ["UITestingBridge"]),
+        .executable(name: "apple-ui-tester", targets: ["AppleUITester"]),
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.17.0"),
@@ -44,6 +45,15 @@ let package = Package(
             name: "UITestingBridge",
             dependencies: [],
             path: "Sources/UITestingBridge"
+        ),
+        .executableTarget(
+            name: "AppleUITester",
+            dependencies: [
+                "VisionEvalKit",
+                "UITestingBridge",
+                "AccessibilityKit",
+            ],
+            path: "Sources/AppleUITester"
         ),
         .testTarget(
             name: "AccessibilityKitTests",
