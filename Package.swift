@@ -12,8 +12,10 @@ let package = Package(
         .library(name: "SnapshotKit", targets: ["SnapshotKit"]),
         .library(name: "PerformanceKit", targets: ["PerformanceKit"]),
         .library(name: "VisionEvalKit", targets: ["VisionEvalKit"]),
+        .library(name: "UIActionKit", targets: ["UIActionKit"]),
         .library(name: "UITestingBridge", targets: ["UITestingBridge"]),
         .executable(name: "apple-ui-tester", targets: ["AppleUITester"]),
+        .executable(name: "apple-ui-tester-mcp", targets: ["AppleUITesterMCP"]),
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.17.0"),
@@ -42,8 +44,15 @@ let package = Package(
             path: "Sources/VisionEvalKit"
         ),
         .target(
-            name: "UITestingBridge",
+            name: "UIActionKit",
             dependencies: [],
+            path: "Sources/UIActionKit"
+        ),
+        .target(
+            name: "UITestingBridge",
+            dependencies: [
+                "UIActionKit",
+            ],
             path: "Sources/UITestingBridge"
         ),
         .executableTarget(
@@ -51,9 +60,15 @@ let package = Package(
             dependencies: [
                 "VisionEvalKit",
                 "UITestingBridge",
+                "UIActionKit",
                 "AccessibilityKit",
             ],
             path: "Sources/AppleUITester"
+        ),
+        .executableTarget(
+            name: "AppleUITesterMCP",
+            dependencies: [],
+            path: "Sources/AppleUITesterMCP"
         ),
         .testTarget(
             name: "AccessibilityKitTests",
@@ -64,6 +79,21 @@ let package = Package(
             name: "VisionEvalKitTests",
             dependencies: ["VisionEvalKit"],
             path: "Tests/VisionEvalKitTests"
+        ),
+        .testTarget(
+            name: "UIActionKitTests",
+            dependencies: ["UIActionKit"],
+            path: "Tests/UIActionKitTests"
+        ),
+        .testTarget(
+            name: "UITestingBridgeTests",
+            dependencies: ["UITestingBridge", "UIActionKit"],
+            path: "Tests/UITestingBridgeTests"
+        ),
+        .testTarget(
+            name: "AppleUITesterMCPTests",
+            dependencies: [],
+            path: "Tests/AppleUITesterMCPTests"
         ),
     ]
 )
