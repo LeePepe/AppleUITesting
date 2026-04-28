@@ -9,6 +9,7 @@ A Swift package providing UI testing utilities for iOS and macOS apps.
 | `AccessibilityKit` | Accessibility identifiers and query helpers |
 | `VisionEvalKit` | Claude Vision-powered screenshot evaluation |
 | `UITestingBridge` | Lightweight HTTP server exposing the AX tree on port 7979 |
+| `UIActionKit` | Cross-platform UI action execution (tap, type, swipe) |
 | `SnapshotKit` | Snapshot testing via swift-snapshot-testing |
 | `PerformanceKit` | Performance measurement helpers |
 
@@ -107,6 +108,31 @@ cat /tmp/ux-report.json
 UITestingBridge.start()
 #endif
 ```
+
+## `apple-ui-tester-mcp` MCP Server
+
+An MCP (Model Context Protocol) server that exposes the same UI testing capabilities over stdio JSON-RPC, allowing AI agents to drive UI tests programmatically.
+
+### Build
+
+```bash
+swift build --target AppleUITesterMCP
+
+# Release build
+swift build -c release --target AppleUITesterMCP
+```
+
+### Usage
+
+Run as a stdio MCP server — the binary reads JSON-RPC messages from stdin and writes responses to stdout. Configure it in your MCP client (e.g. Claude Code, Hermes Agent):
+
+```json
+{
+  "command": ".build/release/apple-ui-tester-mcp"
+}
+```
+
+The server exposes tools for fetching accessibility trees, capturing screenshots, running Vision-based evaluations, and executing UI actions via `UIActionKit`.
 
 ## Integrating UITestingBridge
 
