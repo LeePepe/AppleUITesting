@@ -148,7 +148,7 @@ public final class UITestingBridge: @unchecked Sendable {
             if let window = UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })
                 .flatMap(\.windows)
-                .first(where: \.isKeyWindow) {
+                .first(where: { $0.isKeyWindow }) {
                 let renderer = UIGraphicsImageRenderer(bounds: window.bounds)
                 let image = renderer.image { _ in window.drawHierarchy(in: window.bounds, afterScreenUpdates: true) }
                 pngData = image.pngData()
@@ -254,7 +254,7 @@ public final class UITestingBridge: @unchecked Sendable {
         guard let window = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .flatMap(\.windows)
-            .first(where: \.isKeyWindow)
+            .first(where: { $0.isKeyWindow })
         else { return "{}" }
 
         let node = accessibilityNode(from: window)
@@ -265,7 +265,7 @@ public final class UITestingBridge: @unchecked Sendable {
         guard let window = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
             .flatMap(\.windows)
-            .first(where: \.isKeyWindow)
+            .first(where: { $0.isKeyWindow })
         else { return #"{"error":"No key window"}"# }
 
         guard let view = findView(in: window, identifier: identifier) else {
