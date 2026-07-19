@@ -84,9 +84,9 @@ public final class UITestingBridge: @unchecked Sendable {
         guard let data = body.data(using: .utf8) else {
             return HTTPResponse(status: 400, body: #"{"error":"Invalid request body"}"#)
         }
-        let action: UIAction
+        let action: UIActionKit.UIAction
         do {
-            action = try JSONDecoder().decode(UIAction.self, from: data)
+            action = try JSONDecoder().decode(UIActionKit.UIAction.self, from: data)
         } catch {
             return HTTPResponse(status: 400, body: #"{"error":"Invalid action JSON: \#(error.localizedDescription)"}"#)
         }
@@ -143,20 +143,20 @@ public final class UITestingBridge: @unchecked Sendable {
         return HTTPResponse(body: #"{"image":"\#(base64)","format":"png"}"#)
         #elseif os(iOS)
         let semaphore = DispatchSemaphore(value: 0)
-        var pngData: Data?
+        let pngBox = DataBox()
         DispatchQueue.main.async {
             if let window = UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })
-                .flatMap(\.windows)
+                .flatMap({ $0.windows })
                 .first(where: { $0.isKeyWindow }) {
                 let renderer = UIGraphicsImageRenderer(bounds: window.bounds)
                 let image = renderer.image { _ in window.drawHierarchy(in: window.bounds, afterScreenUpdates: true) }
-                pngData = image.pngData()
+                pngBox.data = image.pngData()
             }
             semaphore.signal()
         }
         semaphore.wait()
-        guard let data = pngData else {
+        guard let data = pngBox.data else {
             return HTTPResponse(status: 500, body: #"{"error":"Screenshot capture failed"}"#)
         }
         let base64 = data.base64EncodedString()
@@ -253,7 +253,7 @@ public final class UITestingBridge: @unchecked Sendable {
     private func buildIOSAXTree() -> String {
         guard let window = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
-            .flatMap(\.windows)
+            .flatMap({ $0.windows })
             .first(where: { $0.isKeyWindow })
         else { return "{}" }
 
@@ -264,7 +264,7 @@ public final class UITestingBridge: @unchecked Sendable {
     private func buildIOSElementJSON(identifier: String) -> String {
         guard let window = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
-            .flatMap(\.windows)
+            .flatMap({ $0.windows })
             .first(where: { $0.isKeyWindow })
         else { return #"{"error":"No key window"}"# }
 
@@ -295,7 +295,7 @@ public final class UITestingBridge: @unchecked Sendable {
         return nil
     }
 
-    private func accessibilityNode(from element: UIAccessibilityElement, depth: Int = 0, maxDepth: Int = 6) -> [String: Any] {
+    private func accessibilityNode(from element: UIView, depth: Int = 0, maxDepth: Int = 6) -> [String: Any] {
         var result: [String: Any] = [:]
         result["label"] = element.accessibilityLabel ?? ""
         result["identifier"] = element.accessibilityIdentifier ?? ""
@@ -332,6 +332,18 @@ private final class ResultBox: @unchecked Sendable {
 
     func setError(_ value: Error) {
         lock.withLock { _error = value }
+    }
+}
+
+/// Thread-safe box for transferring `Data` across the main-queue boundary
+/// used by the iOS screenshot handler (avoids `sending` data-race diagnostics).
+private final class DataBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _data: Data?
+
+    var data: Data? {
+        get { lock.withLock { _data } }
+        set { lock.withLock { _data = newValue } }
     }
 }
 
